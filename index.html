@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>My Home — Home Improvement Tracker</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#3f9352">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="My Home">
+<style>
+  :root{
+    --bg:#f7f6f0; --card:#ffffff; --ink:#1f2a3a; --muted:#6b7280;
+    --green:#3f9352; --green-dark:#2f7a41; --green-soft:#e3f0e4;
+    --blue:#3b82c4; --blue-soft:#dbeafe; --amber:#e0a32e; --amber-soft:#fdf0d6;
+    --purple:#7c6bd6; --purple-soft:#ece8fb; --line:#eceae2; --shadow:0 6px 22px rgba(31,42,58,.08);
+    --radius:20px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.45;
+    max-width:480px; margin:0 auto; min-height:100vh; position:relative;
+  }
+  .app{padding:18px 20px 120px}
+  button{font-family:inherit;cursor:pointer;border:none;background:none}
+  img{display:block;max-width:100%}
+
+  /* header */
+  .hero{display:flex;justify-content:space-between;align-items:flex-start;padding-top:6px}
+  .hero h1{font-size:34px;margin:6px 0 6px;font-weight:800;letter-spacing:-.5px}
+  .hero p{color:var(--muted);font-size:16px;max-width:60%;margin:0}
+  .gear{width:46px;height:46px;border-radius:50%;background:var(--green-soft);display:flex;align-items:center;justify-content:center;flex:none}
+  .house{width:150px;flex:none;margin-top:-6px}
+
+  /* stats */
+  .stats{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);display:flex;margin-top:22px;padding:20px 6px}
+  .stat{flex:1;text-align:center;position:relative;padding:0 4px}
+  .stat + .stat::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:1px;background:var(--line)}
+  .stat .ic{width:52px;height:52px;border-radius:50%;margin:0 auto 10px;display:flex;align-items:center;justify-content:center}
+  .stat .num{font-size:26px;font-weight:800}
+  .stat .lbl{font-size:12.5px;color:var(--muted);line-height:1.25;margin-top:2px}
+
+  /* section */
+  .sec-head{display:flex;justify-content:space-between;align-items:center;margin:28px 2px 14px}
+  .sec-head h2{font-size:23px;font-weight:800;margin:0}
+  .viewall{color:var(--green-dark);font-weight:700;font-size:15px;display:flex;align-items:center;gap:3px}
+
+  /* project card */
+  .pcard{background:var(--card);border-radius:18px;box-shadow:var(--shadow);display:flex;gap:14px;padding:12px;margin-bottom:16px;align-items:stretch;cursor:pointer}
+  .ba{position:relative;width:128px;flex:none;border-radius:12px;overflow:hidden;background:#ddd;aspect-ratio:1/1}
+  .ba .layer{position:absolute;inset:0;background-size:cover;background-position:center}
+  .ba .after{clip-path:inset(0 0 0 50%)}
+  .ba .divider{position:absolute;top:0;bottom:0;left:50%;width:2px;background:#fff;transform:translateX(-1px)}
+  .ba .knob{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:30px;height:30px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;color:var(--ink);font-size:12px;cursor:ew-resize}
+  .ba .tag{position:absolute;bottom:6px;font-size:9.5px;font-weight:800;letter-spacing:.5px;color:#fff;background:rgba(0,0,0,.45);padding:2px 6px;border-radius:5px}
+  .ba .tag.b{left:6px} .ba .tag.a{right:6px}
+  .pbody{flex:1;min-width:0;display:flex;flex-direction:column}
+  .ptop{display:flex;align-items:center;gap:8px}
+  .pchip{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex:none}
+  .pbody h3{font-size:18px;font-weight:800;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pdesc{color:var(--muted);font-size:14px;margin:6px 0 0}
+  .pmeta{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:10px}
+  .pdate{color:var(--muted);font-size:13px;display:flex;align-items:center;gap:5px}
+  .badge{font-size:12px;font-weight:700;padding:4px 11px;border-radius:20px}
+  .badge.done{background:var(--green-soft);color:var(--green-dark)}
+  .badge.prog{background:var(--amber-soft);color:#9a6f12}
+  .badge.plan{background:var(--blue-soft);color:#1f5e96}
+  .chev{color:#cbd0d8;align-self:center;font-size:20px;flex:none}
+
+  /* filters */
+  .filters{display:flex;gap:8px;overflow-x:auto;padding:2px 0 6px;margin-bottom:6px;scrollbar-width:none}
+  .filters::-webkit-scrollbar{display:none}
+  .fbtn{flex:none;padding:8px 15px;border-radius:20px;background:var(--card);border:1px solid var(--line);font-weight:600;font-size:14px;color:var(--muted)}
+  .fbtn.on{background:var(--green);color:#fff;border-color:var(--green)}
+
+  /* timeline */
+  .tyear{font-size:18px;font-weight:800;margin:18px 2px 12px}
+  .titem{display:flex;gap:14px;margin-bottom:4px}
+  .trail{display:flex;flex-direction:column;align-items:center;flex:none;width:22px}
+  .tdot{width:14px;height:14px;border-radius:50%;border:3px solid var(--green);background:#fff;margin-top:18px}
+  .tline{flex:1;width:2px;background:var(--line)}
+  .tcard{flex:1;background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:14px;margin-bottom:14px;cursor:pointer;display:flex;gap:12px;align-items:center}
+  .tthumb{width:54px;height:54px;border-radius:10px;background-size:cover;background-position:center;flex:none}
+  .tcard h4{margin:0;font-size:16px;font-weight:700}
+  .tcard .sub{color:var(--muted);font-size:13px;margin-top:3px}
+
+  /* photos grid */
+  .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+  .pg{position:relative;border-radius:14px;overflow:hidden;aspect-ratio:1/1;background-size:cover;background-position:center;box-shadow:var(--shadow)}
+  .pg .cap{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(0,0,0,.6));color:#fff;font-size:11px;font-weight:700;padding:14px 8px 6px}
+  .pg .ph{position:absolute;top:7px;left:7px;font-size:9px;font-weight:800;letter-spacing:.5px;color:#fff;background:rgba(0,0,0,.5);padding:2px 6px;border-radius:5px}
+
+  /* fab */
+  .fab{position:fixed;bottom:96px;right:calc(50% - 240px + 22px);width:62px;height:62px;border-radius:50%;background:var(--green);color:#fff;box-shadow:0 8px 20px rgba(63,147,82,.45);display:flex;align-items:center;justify-content:center;font-size:30px;z-index:40}
+  @media(max-width:480px){.fab{right:22px}}
+
+  /* nav */
+  .nav{position:fixed;bottom:0;left:0;right:0;max-width:480px;margin:0 auto;background:var(--card);border-top:1px solid var(--line);display:flex;padding:10px 0 22px;z-index:30;box-shadow:0 -4px 16px rgba(31,42,58,.04)}
+  .nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--muted);font-size:11.5px;font-weight:600}
+  .nav button.on{color:var(--green-dark)}
+  .nav svg{width:24px;height:24px}
+
+  /* empty */
+  .empty{text-align:center;color:var(--muted);padding:60px 20px}
+  .empty .big{font-size:40px;margin-bottom:10px}
+
+  /* modal */
+  .scrim{position:fixed;inset:0;background:rgba(20,25,33,.45);z-index:50;display:none;align-items:flex-end;justify-content:center}
+  .scrim.show{display:flex}
+  .sheet{background:var(--bg);width:100%;max-width:480px;border-radius:24px 24px 0 0;max-height:94vh;overflow-y:auto;padding:8px 20px 30px;animation:up .25s ease}
+  @keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+  .grab{width:42px;height:5px;border-radius:3px;background:#d8d6cc;margin:8px auto 6px}
+  .sheet h2{font-size:22px;margin:6px 2px 18px;font-weight:800}
+  label{display:block;font-size:13px;font-weight:700;color:#46505f;margin:14px 2px 6px}
+  input,select,textarea{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:12px;font-size:15px;font-family:inherit;background:#fff;color:var(--ink)}
+  textarea{resize:vertical;min-height:60px}
+  .row2{display:flex;gap:12px}.row2>div{flex:1}
+  .photo-in{display:flex;gap:12px}
+  .photo-in>div{flex:1}
+  .drop{border:2px dashed #cdd3da;border-radius:14px;aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);font-size:12px;font-weight:600;text-align:center;background:#fff;background-size:cover;background-position:center;overflow:hidden;position:relative}
+  .drop .big{font-size:26px;margin-bottom:4px}
+  .drop input{display:none}
+  .actions{display:flex;gap:12px;margin-top:24px}
+  .btn{flex:1;padding:15px;border-radius:14px;font-weight:800;font-size:16px}
+  .btn.primary{background:var(--green);color:#fff}
+  .btn.ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}
+  .btn.danger{background:#fff;border:1px solid #f0c6c6;color:#c0392b;font-weight:700;font-size:14px;padding:12px;margin-top:18px;width:100%}
+
+  /* detail */
+  .dhero{position:relative;border-radius:18px;overflow:hidden;aspect-ratio:4/3;margin:6px 0 18px}
+  .dmeta{background:#fff;border-radius:16px;box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+  .dmrow{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line);font-size:15px}
+  .dmrow:last-child{border-bottom:none}
+  .dmrow .k{color:var(--muted)}
+  .dmrow .v{font-weight:700;text-align:right}
+  .bbar{height:9px;border-radius:6px;background:#eee;overflow:hidden;margin-top:8px}
+  .bbar > i{display:block;height:100%;border-radius:6px}
+  /* multi-photo form */
+  .photolabel{display:flex;align-items:center;justify-content:space-between}
+  .pcount{font-weight:600;color:var(--muted);font-size:12px}
+  .thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px}
+  .thumb{position:relative;aspect-ratio:1/1;border-radius:10px;background:#fff;background-size:cover;background-position:center;border:1px solid var(--line)}
+  .thumb.add{display:flex;align-items:center;justify-content:center;border:2px dashed #cdd3da;color:var(--muted);cursor:pointer}
+  .thumb.add span{font-size:24px}
+  .thumb.add input{display:none}
+  .thumb .rm{position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;background:#c0392b;color:#fff;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+  /* view-all badge on detail hero */
+  .dhero{position:relative}
+  .viewall-photos{position:absolute;top:10px;right:10px;background:rgba(20,25,33,.62);color:#fff;font-size:12.5px;font-weight:700;padding:7px 12px;border-radius:20px;display:flex;align-items:center;gap:6px;z-index:5;cursor:pointer}
+  /* gallery overlay */
+  .gscrim{position:fixed;inset:0;background:rgba(15,18,24,.95);z-index:60;display:none;flex-direction:column;max-width:480px;margin:0 auto}
+  .gscrim.show{display:flex}
+  .ghead{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 12px;color:#fff}
+  .ghead h3{margin:0;font-size:18px;font-weight:800}
+  .gclose{color:#fff;font-size:24px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(255,255,255,.12)}
+  .gbody{flex:1;overflow-y:auto;padding:6px 20px 40px}
+  .glabel{color:#cfd3da;font-size:13px;font-weight:700;letter-spacing:.5px;margin:16px 2px 8px}
+  .ggrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .gcell{position:relative;border-radius:12px;overflow:hidden;aspect-ratio:1/1;background-size:cover;background-position:center}
+  .gcell .ph{position:absolute;top:7px;left:7px;font-size:9px;font-weight:800;letter-spacing:.5px;color:#fff;background:rgba(0,0,0,.5);padding:2px 6px;border-radius:5px}
+  /* property switcher (home) */
+  .propswitch{display:flex;gap:8px;overflow-x:auto;margin-top:18px;padding-bottom:2px;scrollbar-width:none}
+  .propswitch::-webkit-scrollbar{display:none}
+  .pschip{flex:none;display:flex;align-items:center;gap:6px;padding:9px 15px;border-radius:22px;background:var(--card);border:1px solid var(--line);font-weight:700;font-size:14px;color:var(--muted);box-shadow:var(--shadow)}
+  .pschip.on{background:var(--green);color:#fff;border-color:var(--green)}
+  .pschip.manage{color:var(--green-dark);border-style:dashed}
+  /* settings */
+  .setsec{margin:22px 0 6px;font-size:13px;font-weight:800;letter-spacing:.4px;color:var(--muted);text-transform:uppercase}
+  .setnote{font-size:12.5px;color:var(--muted);margin:2px 2px 10px;line-height:1.4}
+  .avatar{width:64px;height:64px;border-radius:50%;background:var(--green-soft);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:var(--green-dark);margin:4px auto 10px}
+  .propcard{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+  .propcard .pt{display:flex;align-items:center;gap:10px}
+  .propcard h4{margin:0;font-size:16px;font-weight:800}
+  .propcard .addr{color:var(--muted);font-size:13px;margin-top:3px}
+  .propcard .acttag{margin-left:auto;font-size:11px;font-weight:800;color:var(--green-dark);background:var(--green-soft);padding:3px 9px;border-radius:20px}
+  .propcard .pacts{display:flex;gap:8px;margin-top:12px}
+  .minibtn{flex:1;padding:9px;border-radius:10px;font-weight:700;font-size:13px;border:1px solid var(--line);background:#fff;color:var(--ink)}
+  .minibtn.use{background:var(--green-soft);border-color:var(--green-soft);color:var(--green-dark)}
+  .minibtn.del{color:#c0392b;border-color:#f0c6c6}
+  .hide{display:none!important}
+</style>
+</head>
+<body>
+  <div class="app">
+    <!-- HOME -->
+    <section id="view-home">
+      <div class="hero">
+        <div>
+          <h1 id="homeTitle">My Home 🏡</h1>
+          <p>Documenting the little improvements that make a big difference. 💛</p>
+        </div>
+        <button class="gear" title="Settings" onclick="openSettings()">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3f9352" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+
+      <div class="propswitch" id="propSwitch"></div>
+
+      <div class="stats" id="stats"></div>
+
+      <div class="sec-head">
+        <h2>Recent Projects</h2>
+        <button class="viewall" onclick="go('projects')">View All ›</button>
+      </div>
+      <div id="recent"></div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section id="view-projects" class="hide">
+      <div class="sec-head"><h2>Projects</h2></div>
+      <div class="filters" id="filters"></div>
+      <div id="all-projects"></div>
+    </section>
+
+    <!-- TIMELINE -->
+    <section id="view-timeline" class="hide">
+      <div class="sec-head"><h2>Timeline</h2></div>
+      <div id="timeline"></div>
+    </section>
+
+    <!-- PHOTOS -->
+    <section id="view-photos" class="hide">
+      <div class="sec-head"><h2>Photos</h2></div>
+      <div class="pgrid" id="photos"></div>
+    </section>
+
+    <!-- DETAIL -->
+    <section id="view-detail" class="hide"></section>
+  </div>
+
+  <button class="fab" onclick="openForm()" title="New project">+</button>
+
+  <nav class="nav" id="nav">
+    <button data-v="home" class="on" onclick="go('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Home</button>
+    <button data-v="projects" onclick="go('projects')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>Projects</button>
+    <button data-v="timeline" onclick="go('timeline')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1.5"/><circle cx="3.5" cy="12" r="1.5"/><circle cx="3.5" cy="18" r="1.5"/></svg>Timeline</button>
+    <button data-v="photos" onclick="go('photos')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>Photos</button>
+  </nav>
+
+  <!-- FORM SHEET -->
+  <div class="scrim" id="scrim">
+    <div class="sheet" id="sheet"></div>
+  </div>
+
+  <!-- PHOTO GALLERY -->
+  <div class="gscrim" id="gscrim">
+    <div class="ghead"><h3 id="gtitle">Photos</h3><button class="gclose" onclick="closeGallery()">×</button></div>
+    <div class="gbody" id="gbody"></div>
+  </div>
+
+  <!-- SETTINGS SHEET -->
+  <div class="scrim" id="setScrim">
+    <div class="sheet" id="setSheet"></div>
+  </div>
+
+<script>
+/* ---------- data ---------- */
+const KEY='hometracker.v1';
+const CATS={
+  Interior:['Kitchen','Bathroom','Bedroom','Living Room','Basement','Office','Laundry','Other Interior'],
+  Exterior:['Landscaping','Deck / Patio','Roofing','Siding','Driveway','Garage','Fencing','Other Exterior']
+};
+const ICONS={Kitchen:'🍽️',Bathroom:'🛁',Bedroom:'🛏️','Living Room':'🛋️',Basement:'🧱',Office:'💻',Laundry:'🧺','Other Interior':'🏠',Landscaping:'🌿','Deck / Patio':'🪑',Roofing:'🏚️',Siding:'🧰',Driveway:'🚗',Garage:'🚪',Fencing:'🪵','Other Exterior':'🌳'};
+
+function ph(label,tone){ // svg placeholder image as data uri
+  const c=tone==='before'?['#9b8f7a','#7d705c']:['#bfe3c4','#8ec79a'];
+  const s=`<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='${c[0]}'/><stop offset='1' stop-color='${c[1]}'/></linearGradient></defs><rect width='400' height='400' fill='url(#g)'/><text x='50%' y='50%' font-family='sans-serif' font-size='34' fill='rgba(255,255,255,.85)' text-anchor='middle' dominant-baseline='middle'>${label}</text></svg>`;
+  return 'data:image/svg+xml;utf8,'+encodeURIComponent(s);
+}
+
+const DEFAULT_PROP='home';
+const DEMO=[
+  {id:'d1',propertyId:'home',title:'Kitchen Refresh',desc:'New cabinets, backsplash & lighting',cat:'Interior',sub:'Kitchen',status:'Completed',start:'2024-03-01',end:'2024-05-12',goal:12000,actual:13450,befores:[ph('Kitchen','before'),ph('Cabinets','before'),ph('Counters','before')],afters:[ph('Kitchen','after'),ph('Cabinets','after'),ph('Lighting','after')]},
+  {id:'d2',propertyId:'home',title:'Backyard Deck',desc:'Built a new deck & added string lights',cat:'Exterior',sub:'Deck / Patio',status:'Completed',start:'2024-03-15',end:'2024-04-28',goal:8000,actual:7600,befores:[ph('Backyard','before'),ph('Old Lawn','before')],afters:[ph('Deck','after'),ph('Lights','after')]},
+  {id:'d3',propertyId:'home',title:'Bathroom Update',desc:'New vanity, mirror & fixtures',cat:'Interior',sub:'Bathroom',status:'Completed',start:'2024-02-20',end:'2024-04-03',goal:5000,actual:5200,befores:[ph('Bathroom','before')],afters:[ph('Bath','after')]}
+];
+const DEMO_PROPS=[{id:'home',name:'My Home',emoji:'🏡',type:'Single-family',address:''}];
+
+let DATA=load();
+let PROPS=loadProps();
+let PROFILE=loadProfile();
+let activeProp=localStorage.getItem('hometracker.active')||DEFAULT_PROP;
+
+function load(){try{const r=JSON.parse(localStorage.getItem(KEY));if(Array.isArray(r))return r;}catch(e){} return DEMO.slice();}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(DATA));return true;}catch(e){return false;}}
+function loadProps(){try{const r=JSON.parse(localStorage.getItem('hometracker.props'));if(Array.isArray(r)&&r.length)return r;}catch(e){} return DEMO_PROPS.slice();}
+function saveProps(){localStorage.setItem('hometracker.props',JSON.stringify(PROPS));}
+function loadProfile(){try{const r=JSON.parse(localStorage.getItem('hometracker.profile'));if(r&&typeof r==='object')return r;}catch(e){} return {name:'',email:''};}
+function saveProfile(){localStorage.setItem('hometracker.profile',JSON.stringify(PROFILE));}
+function setActive(id){activeProp=id;localStorage.setItem('hometracker.active',id);}
+// migration: ensure every project belongs to a property that exists
+(function migrate(){
+  const ids=new Set(PROPS.map(p=>p.id));
+  let changed=false;
+  DATA.forEach(p=>{if(!p.propertyId||!ids.has(p.propertyId)){p.propertyId=PROPS[0].id;changed=true;}});
+  if(changed)save();
+  if(activeProp!=='all'&&!ids.has(activeProp)){setActive(PROPS[0].id);}
+})();
+function propById(id){return PROPS.find(p=>p.id===id);}
+function activePropName(){if(activeProp==='all')return 'All Properties';const p=propById(activeProp);return p?p.name:'My Home';}
+function activeEmoji(){if(activeProp==='all')return '🏘️';const p=propById(activeProp);return p?(p.emoji||'🏡'):'🏡';}
+/* projects scoped to the active property */
+function scoped(){return activeProp==='all'?DATA.slice():DATA.filter(p=>p.propertyId===activeProp);}
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const fmtMoney=n=>n||n===0?'$'+Number(n).toLocaleString():'—';
+const fmtDate=d=>d?new Date(d+'T00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—';
+const badgeClass=s=>s==='Completed'?'done':s==='In Progress'?'prog':'plan';
+function sortByDate(a,b){return new Date(b.end||b.start||0)-new Date(a.end||a.start||0);}
+/* display name for a project's area (custom name overrides "Other ...") */
+function areaLabel(p){return (p.customArea&&p.customArea.trim())?p.customArea:p.sub;}
+/* returns array of image data-uris for a project; supports old single-photo records */
+function imgs(p,which){
+  const arr=which==='before'?p.befores:p.afters;
+  if(Array.isArray(arr))return arr.filter(Boolean);
+  const single=which==='before'?p.before:p.after;
+  return single?[single]:[];
+}
+
+/* ---------- stats ---------- */
+function renderStats(){
+  const D=scoped();
+  const done=D.filter(p=>p.status==='Completed').length;
+  const yr=new Date().getFullYear();
+  const thisYr=D.filter(p=>(p.end||p.start||'').startsWith(yr)).length;
+  const rooms=new Set(D.map(p=>areaLabel(p))).size;
+  const photos=D.reduce((n,p)=>n+imgs(p,'before').length+imgs(p,'after').length,0);
+  $('#stats').innerHTML=`
+    ${stat('#e3f0e4','🔨','#2f7a41',done,'Projects<br>Completed','openProjects(\'Completed\')')}
+    ${stat('#dbeafe','📅','#3b82c4',thisYr,'This Year','openProjects(\'This Year\')')}
+    ${stat('#fdf0d6','⭐','#e0a32e',rooms,'Rooms<br>Improved','openProjects(\'All\')')}
+    ${stat('#ece8fb','📷','#7c6bd6',photos,'Photos<br>Added','go(\'photos\')')}`;
+}
+const stat=(bg,ic,col,num,lbl,act)=>`<div class="stat" role="button" tabindex="0" style="cursor:pointer" onclick="${act}">
+  <div class="ic" style="background:${bg}">${ic}</div><div class="num" style="color:${col}">${num}</div><div class="lbl">${lbl}</div></div>`;
+function openProjects(filter){activeFilter=filter;go('projects');}
+function propPrefix(p){const pr=propById(p.propertyId);return pr?`<span style="color:var(--green-dark);font-weight:700">${pr.emoji||'🏡'} ${esc(pr.name)}</span> · `:'';}
+
+/* home header + property switcher */
+function renderHomeHeader(){
+  $('#homeTitle').innerHTML=esc(activePropName())+' '+activeEmoji();
+}
+function renderPropSwitch(){
+  const el=$('#propSwitch');
+  if(PROPS.length<2){el.innerHTML='';return;} // no clutter with a single property
+  let html=PROPS.map(pr=>`<button class="pschip ${activeProp===pr.id?'on':''}" onclick="switchProp('${pr.id}')">${pr.emoji||'🏡'} ${esc(pr.name)}</button>`).join('');
+  html+=`<button class="pschip ${activeProp==='all'?'on':''}" onclick="switchProp('all')">🏘️ All</button>`;
+  html+=`<button class="pschip manage" onclick="openSettings()">⚙︎ Manage</button>`;
+  el.innerHTML=html;
+}
+function switchProp(id){setActive(id);activeFilter='All';renderHomeHeader();renderPropSwitch();refresh();go('home');}
+
+/* ---------- project card ---------- */
+function card(p){
+  return `<div class="pcard" onclick="detail('${p.id}')">
+    ${baSlider(p)}
+    <div class="pbody">
+      <div class="ptop"><div class="pchip" style="background:${chipBg(p.cat)}">${ICONS[p.sub]||'🏠'}</div><h3>${esc(p.title)}</h3></div>
+      <p class="pdesc">${esc(p.desc||'')}</p>
+      <div class="pmeta">
+        <span class="pdate">${activeProp==='all'?propPrefix(p):''}📅 ${fmtDate(p.end||p.start)}</span>
+        <span class="badge ${badgeClass(p.status)}">${p.status}</span>
+      </div>
+    </div>
+    <span class="chev">›</span>
+  </div>`;
+}
+const chipBg=c=>c==='Interior'?'#e3f0e4':'#fdf0d6';
+function baSlider(p,full){
+  const b=imgs(p,'before'),a=imgs(p,'after');
+  return `<div class="ba" data-ba ${full?'style="width:100%"':''}>
+    <div class="layer before" style="background-image:url('${b[0]||ph('No photo','before')}')"></div>
+    <div class="layer after" style="background-image:url('${a[0]||ph('No photo','after')}')"></div>
+    <div class="divider"></div><div class="knob">⟷</div>
+    <span class="tag b">BEFORE</span><span class="tag a">AFTER</span>
+  </div>`;
+}
+/* slider drag */
+function wireSliders(root){
+  (root||document).querySelectorAll('[data-ba]').forEach(ba=>{
+    if(ba._w)return; ba._w=1;
+    const after=ba.querySelector('.after'),div=ba.querySelector('.divider'),knob=ba.querySelector('.knob');
+    const move=x=>{const r=ba.getBoundingClientRect();let pct=(x-r.left)/r.width*100;pct=Math.max(4,Math.min(96,pct));after.style.clipPath=`inset(0 0 0 ${pct}%)`;div.style.left=pct+'%';knob.style.left=pct+'%';};
+    let drag=false;
+    const stop=e=>e.stopPropagation();
+    knob.addEventListener('pointerdown',e=>{drag=true;stop(e);});
+    ba.addEventListener('pointerdown',e=>{drag=true;move(e.clientX);stop(e);});
+    window.addEventListener('pointermove',e=>{if(drag)move(e.clientX);});
+    window.addEventListener('pointerup',()=>drag=false);
+    ba.addEventListener('click',stop);
+  });
+}
+
+/* ---------- views ---------- */
+function renderRecent(){
+  const list=scoped().sort(sortByDate).slice(0,3);
+  $('#recent').innerHTML=list.length?list.map(card).join(''):emptyMsg('No projects yet','Tap + to add your first home improvement.');
+  wireSliders($('#recent'));
+}
+
+let activeFilter='All';
+function renderProjects(){
+  const f=$('#filters');
+  const opts=['All','Completed','This Year','Interior','Exterior',...Object.values(CATS).flat()];
+  f.innerHTML=opts.map(o=>`<button class="fbtn ${o===activeFilter?'on':''}" onclick="setFilter('${o.replace(/'/g,"\\'")}')">${o}</button>`).join('');
+  let list=scoped().sort(sortByDate);
+  const yr=String(new Date().getFullYear());
+  if(activeFilter==='Completed') list=list.filter(p=>p.status==='Completed');
+  else if(activeFilter==='This Year') list=list.filter(p=>(p.end||p.start||'').startsWith(yr));
+  else if(activeFilter!=='All') list=list.filter(p=>p.cat===activeFilter||p.sub===activeFilter);
+  $('#all-projects').innerHTML=list.length?list.map(card).join(''):emptyMsg('Nothing here','No projects match this filter.');
+  wireSliders($('#all-projects'));
+}
+function setFilter(f){activeFilter=f;renderProjects();}
+
+function renderTimeline(){
+  const list=scoped().sort(sortByDate);
+  if(!list.length){$('#timeline').innerHTML=emptyMsg('No timeline yet','Completed projects will appear here by date.');return;}
+  const groups={};
+  list.forEach(p=>{const y=(p.end||p.start||'—').slice(0,4);(groups[y]=groups[y]||[]).push(p);});
+  let html='';
+  Object.keys(groups).sort((a,b)=>b-a).forEach(y=>{
+    html+=`<div class="tyear">${y}</div>`;
+    groups[y].forEach((p,i,arr)=>{
+      html+=`<div class="titem">
+        <div class="trail"><div class="tdot"></div>${i<arr.length-1?'<div class="tline"></div>':''}</div>
+        <div class="tcard" onclick="detail('${p.id}')">
+          <div class="tthumb" style="background-image:url('${imgs(p,'after')[0]||imgs(p,'before')[0]||ph('—','after')}')"></div>
+          <div style="flex:1"><h4>${esc(p.title)}</h4><div class="sub">${ICONS[p.sub]||'🏠'} ${esc(areaLabel(p))} · ${fmtDate(p.end||p.start)}</div></div>
+          <span class="badge ${badgeClass(p.status)}">${p.status}</span>
+        </div></div>`;
+    });
+  });
+  $('#timeline').innerHTML=html;
+}
+
+function renderPhotos(){
+  const cells=[];
+  scoped().sort(sortByDate).forEach(p=>{
+    imgs(p,'before').forEach(src=>cells.push({img:src,ph:'BEFORE',cap:p.title,id:p.id}));
+    imgs(p,'after').forEach(src=>cells.push({img:src,ph:'AFTER',cap:p.title,id:p.id}));
+  });
+  $('#photos').innerHTML=cells.length?cells.map(c=>`<div class="pg" style="background-image:url('${c.img}')" onclick="openGallery('${c.id}')"><span class="ph">${c.ph}</span><div class="cap">${esc(c.cap)}</div></div>`).join(''):emptyMsg('No photos yet','Add before & after photos to your projects.');
+}
+
+function emptyMsg(t,s){return `<div class="empty"><div class="big">🏠</div><strong>${t}</strong><br><span style="font-size:14px">${s}</span></div>`;}
+
+/* ---------- detail ---------- */
+function detail(id){
+  const p=DATA.find(x=>x.id===id);if(!p)return;
+  const overBudget=p.actual>p.goal;
+  const pct=p.goal?Math.min(100,Math.round(p.actual/p.goal*100)):0;
+  $('#view-detail').innerHTML=`
+    <button class="viewall" style="margin:4px 0 4px" onclick="go(lastView)">‹ Back</button>
+    <div class="sec-head" style="margin:6px 2px 6px"><h2>${esc(p.title)}</h2></div>
+    <div style="display:flex;align-items:center;gap:8px;margin:0 2px 12px">
+      <span class="pchip" style="background:${chipBg(p.cat)}">${ICONS[p.sub]||'🏠'}</span>
+      <span style="color:var(--muted)">${p.cat} · ${esc(areaLabel(p))}</span>
+      <span class="badge ${badgeClass(p.status)}" style="margin-left:auto">${p.status}</span>
+    </div>
+    <div class="dhero" onclick="openGallery('${p.id}')">${baSlider(p,true)}
+      <span class="viewall-photos" onpointerdown="event.stopPropagation()">⊞ View all ${imgs(p,'before').length+imgs(p,'after').length} photos</span>
+    </div>
+    ${p.desc?`<p style="color:#46505f;margin:0 2px 16px">${esc(p.desc)}</p>`:''}
+    <div class="dmeta">
+      <div class="dmrow"><span class="k">Start date</span><span class="v">${fmtDate(p.start)}</span></div>
+      <div class="dmrow"><span class="k">Completion date</span><span class="v">${fmtDate(p.end)}</span></div>
+      <div class="dmrow"><span class="k">Goal budget</span><span class="v">${fmtMoney(p.goal)}</span></div>
+      <div class="dmrow"><span class="k">Actual spent</span><span class="v" style="color:${overBudget?'#c0392b':'#2f7a41'}">${fmtMoney(p.actual)}</span></div>
+      <div style="padding-top:12px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted)"><span>Budget used</span><span>${pct}%${overBudget?' · over':''}</span></div>
+        <div class="bbar"><i style="width:${pct}%;background:${overBudget?'#e0533c':'#3f9352'}"></i></div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" onclick="openForm('${p.id}')">Edit project</button>
+    </div>
+    <button class="btn danger" onclick="del('${p.id}')">Delete project</button>
+  `;
+  go('detail',true);
+  wireSliders($('#view-detail'));
+}
+function del(id){if(!confirm('Delete this project? This cannot be undone.'))return;DATA=DATA.filter(p=>p.id!==id);save();go(lastView==='detail'?'home':lastView);refresh();}
+
+/* ---------- photo gallery ---------- */
+function openGallery(id){
+  const p=DATA.find(x=>x.id===id);if(!p)return;
+  const b=imgs(p,'before'),a=imgs(p,'after');
+  const cell=(src,tag)=>`<div class="gcell" style="background-image:url('${src}')"><span class="ph">${tag}</span></div>`;
+  let html='';
+  if(b.length)html+=`<div class="glabel">BEFORE · ${b.length}</div><div class="ggrid">${b.map(s=>cell(s,'BEFORE')).join('')}</div>`;
+  if(a.length)html+=`<div class="glabel">AFTER · ${a.length}</div><div class="ggrid">${a.map(s=>cell(s,'AFTER')).join('')}</div>`;
+  if(!html)html=`<div class="empty" style="color:#cfd3da">No photos added to this project yet.</div>`;
+  $('#gtitle').textContent=p.title;
+  $('#gbody').innerHTML=html;
+  $('#gscrim').classList.add('show');
+}
+function closeGallery(){$('#gscrim').classList.remove('show');}
+
+/* ---------- form ---------- */
+let editingPhotos={befores:[],afters:[]};
+const MAX_PHOTOS=10;
+function openForm(id){
+  const p=id?DATA.find(x=>x.id===id):null;
+  const defProp=p?p.propertyId:(activeProp!=='all'?activeProp:PROPS[0].id);
+  editingPhotos={befores:p?imgs(p,'before').slice():[],afters:p?imgs(p,'after').slice():[]};
+  const subOpts=cat=>Object.entries(CATS).map(([m,subs])=>`<optgroup label="${m}">${subs.map(s=>`<option ${p&&p.sub===s?'selected':''}>${s}</option>`).join('')}</optgroup>`).join('');
+  $('#sheet').innerHTML=`
+    <div class="grab"></div>
+    <h2>${p?'Edit Project':'New Project'}</h2>
+    <label>Project name</label>
+    <input id="f_title" placeholder="e.g. Kitchen Refresh" value="${p?esc(p.title):''}">
+    <div ${PROPS.length<2?'class="hide"':''}>
+      <label>Property</label>
+      <select id="f_property">${PROPS.map(pr=>`<option value="${pr.id}" ${pr.id===defProp?'selected':''}>${pr.emoji||'🏡'} ${esc(pr.name)}</option>`).join('')}</select>
+    </div>
+    <label>Description</label>
+    <textarea id="f_desc" placeholder="What did this project involve?">${p?esc(p.desc||''):''}</textarea>
+
+    <div class="photolabel"><label>📷 Before photos</label><span class="pcount" id="cnt_befores"></span></div>
+    <div class="thumbs" id="thumbs_befores"></div>
+
+    <div class="photolabel"><label>✨ After photos</label><span class="pcount" id="cnt_afters"></span></div>
+    <div class="thumbs" id="thumbs_afters"></div>
+
+    <div class="row2">
+      <div><label>Main category</label>
+        <select id="f_cat">${Object.keys(CATS).map(c=>`<option ${p&&p.cat===c?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div><label>Area / room</label>
+        <select id="f_sub">${subOpts()}</select></div>
+    </div>
+    <div id="f_custom_wrap" class="hide">
+      <label>Custom area / room name</label>
+      <input id="f_custom" placeholder="e.g. Mudroom, Sunroom, Workshop" value="${p?esc(p.customArea||''):''}">
+    </div>
+
+    <div class="row2">
+      <div><label>Start date</label><input type="date" id="f_start" value="${p?.start||''}"></div>
+      <div><label>Completion date</label><input type="date" id="f_end" value="${p?.end||''}"></div>
+    </div>
+
+    <div class="row2">
+      <div><label>Goal budget ($)</label><input type="number" id="f_goal" min="0" placeholder="0" value="${p?.goal??''}"></div>
+      <div><label>Actual spent ($)</label><input type="number" id="f_actual" min="0" placeholder="0" value="${p?.actual??''}"></div>
+    </div>
+
+    <label>Status</label>
+    <select id="f_status">
+      ${['Planning','In Progress','Completed'].map(s=>`<option ${p&&p.status===s?'selected':(!p&&s==='Planning'?'selected':'')}>${s}</option>`).join('')}
+    </select>
+
+    <div class="actions">
+      <button class="btn ghost" onclick="closeForm()">Cancel</button>
+      <button class="btn primary" onclick="saveForm('${id||''}')">${p?'Save changes':'Add project'}</button>
+    </div>
+  `;
+  // keep sub in sync with main category
+  $('#f_cat').onchange=function(){
+    const m=this.value;
+    $('#f_sub').innerHTML=CATS[m].map(s=>`<option>${s}</option>`).join('');
+    toggleCustomArea();
+  };
+  // show custom area field only for "Other ..." options
+  $('#f_sub').onchange=toggleCustomArea;
+  // auto-fill completion date when marked Completed (leaves an existing date untouched)
+  $('#f_status').onchange=function(){
+    if(this.value==='Completed' && !$('#f_end').value){
+      $('#f_end').value=new Date().toISOString().slice(0,10);
+    }
+  };
+  toggleCustomArea();
+  renderThumbs('befores');renderThumbs('afters');
+  $('#scrim').classList.add('show');
+}
+function toggleCustomArea(){
+  const isOther=/^Other /.test($('#f_sub').value);
+  $('#f_custom_wrap').classList.toggle('hide',!isOther);
+}
+function closeForm(){$('#scrim').classList.remove('show');}
+function renderThumbs(key){
+  const list=editingPhotos[key];
+  let html=list.map((src,i)=>`<div class="thumb" style="background-image:url('${src}')"><button type="button" class="rm" onclick="rmPhoto('${key}',${i})">×</button></div>`).join('');
+  if(list.length<MAX_PHOTOS)html+=`<label class="thumb add"><span>＋</span><input type="file" accept="image/*" multiple onchange="addPhotos(this,'${key}')"></label>`;
+  $('#thumbs_'+key).innerHTML=html;
+  $('#cnt_'+key).textContent=list.length+'/'+MAX_PHOTOS;
+}
+function addPhotos(input,key){
+  const files=[...input.files];input.value='';
+  files.forEach(f=>{
+    if(editingPhotos[key].length>=MAX_PHOTOS)return;
+    const r=new FileReader();
+    r.onload=e=>compressImage(e.target.result).then(src=>{
+      if(editingPhotos[key].length<MAX_PHOTOS){editingPhotos[key].push(src);renderThumbs(key);}
+    });
+    r.readAsDataURL(f);
+  });
+}
+/* resize/compress so photos fit in browser storage (~5MB total) */
+function compressImage(dataURL){
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>{
+      const MAX=1200;let w=img.width,h=img.height;
+      if(w>h&&w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+      else if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}
+      try{
+        const c=document.createElement('canvas');c.width=w;c.height=h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(c.toDataURL('image/jpeg',0.7));
+      }catch(e){resolve(dataURL);}
+    };
+    img.onerror=()=>resolve(dataURL);
+    img.src=dataURL;
+  });
+}
+function rmPhoto(key,i){editingPhotos[key].splice(i,1);renderThumbs(key);}
+function saveForm(id){
+  const title=$('#f_title').value.trim();
+  if(!title){alert('Please give your project a name.');return;}
+  const obj={
+    id:id||('p'+Date.now()),
+    propertyId:($('#f_property')&&$('#f_property').value)||(activeProp!=='all'?activeProp:PROPS[0].id),
+    title,desc:$('#f_desc').value.trim(),
+    cat:$('#f_cat').value,sub:$('#f_sub').value,
+    customArea:/^Other /.test($('#f_sub').value)?$('#f_custom').value.trim():'',
+    status:$('#f_status').value,
+    start:$('#f_start').value,end:$('#f_end').value,
+    goal:$('#f_goal').value?Number($('#f_goal').value):null,
+    actual:$('#f_actual').value?Number($('#f_actual').value):null,
+    befores:editingPhotos.befores.slice(),afters:editingPhotos.afters.slice()
+  };
+  const idx=id?DATA.findIndex(p=>p.id===id):-1;
+  const prev=idx>-1?DATA[idx]:null;
+  if(idx>-1){DATA[idx]=obj;}else{DATA.push(obj);}
+  if(!save()){
+    if(idx>-1){DATA[idx]=prev;}else{DATA.pop();} // keep memory in sync with storage
+    alert('Couldn’t save — this browser limits saved data to about 5MB and it’s full. Try adding fewer photos here, or removing some from older projects, then save again.');
+    return;
+  }
+  closeForm();refresh();
+  if(getView()==='detail')detail(obj.id);
+}
+
+/* ---------- nav ---------- */
+let lastView='home',curView='home';
+const VIEWS=['home','projects','timeline','photos','detail'];
+function getView(){return curView;}
+function go(v,keepLast){
+  if(!keepLast&&v!=='detail')lastView=v;
+  if(curView!=='detail')lastView=curView;
+  curView=v;
+  VIEWS.forEach(x=>$('#view-'+x).classList.toggle('hide',x!==v));
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  window.scrollTo(0,0);
+  if(v==='projects')renderProjects();
+  if(v==='timeline')renderTimeline();
+  if(v==='photos')renderPhotos();
+}
+function refresh(){renderHomeHeader();renderPropSwitch();renderStats();renderRecent();if(curView==='projects')renderProjects();if(curView==='timeline')renderTimeline();if(curView==='photos')renderPhotos();}
+
+function esc(s){return(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+/* ---------- settings ---------- */
+function openSettings(){
+  const initials=(PROFILE.name||'').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'🙂';
+  const propCount=id=>DATA.filter(p=>p.propertyId===id).length;
+  $('#setSheet').innerHTML=`
+    <div class="grab"></div>
+    <h2>Settings</h2>
+
+    <div class="setsec">My Account</div>
+    <div class="avatar">${initials}</div>
+    <label>Name</label>
+    <input id="s_name" placeholder="Your name" value="${esc(PROFILE.name||'')}">
+    <label>Email</label>
+    <input id="s_email" type="email" placeholder="you@example.com" value="${esc(PROFILE.email||'')}">
+    <div class="actions"><button class="btn primary" onclick="saveAccount()">Save account</button></div>
+    <p class="setnote">Your profile is stored on this device. Sign-in and syncing across devices will come when the tracker becomes a hosted app.</p>
+
+    <div class="setsec">Properties</div>
+    <p class="setnote">Switch the active property to filter every screen to that home. Choose “All Properties” to see everything together.</p>
+    <div class="propcard" style="${activeProp==='all'?'border-color:var(--green)':''}">
+      <div class="pt"><span style="font-size:20px">🏘️</span><h4>All Properties</h4>${activeProp==='all'?'<span class="acttag">Active</span>':''}</div>
+      <div class="addr">${DATA.length} project${DATA.length===1?'':'s'} across ${PROPS.length} propert${PROPS.length===1?'y':'ies'}</div>
+      ${activeProp==='all'?'':'<div class="pacts"><button class="minibtn use" onclick="useProp(\'all\')">View all</button></div>'}
+    </div>
+    ${PROPS.map(pr=>`
+      <div class="propcard" style="${activeProp===pr.id?'border-color:var(--green)':''}">
+        <div class="pt"><span style="font-size:20px">${pr.emoji||'🏡'}</span><h4>${esc(pr.name)}</h4>${activeProp===pr.id?'<span class="acttag">Active</span>':''}</div>
+        <div class="addr">${pr.address?esc(pr.address)+' · ':''}${esc(pr.type||'')} · ${propCount(pr.id)} project${propCount(pr.id)===1?'':'s'}</div>
+        <div class="pacts">
+          ${activeProp===pr.id?'':`<button class="minibtn use" onclick="useProp('${pr.id}')">Set active</button>`}
+          <button class="minibtn" onclick="openPropForm('${pr.id}')">Edit</button>
+          <button class="minibtn del" onclick="delProp('${pr.id}')">Delete</button>
+        </div>
+      </div>`).join('')}
+    <div class="actions"><button class="btn ghost" onclick="openPropForm()">＋ Add property</button></div>
+
+    <div class="actions" style="margin-top:26px"><button class="btn primary" onclick="closeSettings()">Done</button></div>
+  `;
+  $('#setScrim').classList.add('show');
+}
+function closeSettings(){$('#setScrim').classList.remove('show');}
+function saveAccount(){PROFILE.name=$('#s_name').value.trim();PROFILE.email=$('#s_email').value.trim();saveProfile();openSettings();}
+function useProp(id){setActive(id);activeFilter='All';refresh();go('home');closeSettings();}
+
+function openPropForm(id){
+  const pr=id?propById(id):null;
+  $('#setSheet').innerHTML=`
+    <div class="grab"></div>
+    <h2>${pr?'Edit Property':'Add Property'}</h2>
+    <label>Property name</label>
+    <input id="pf_name" placeholder="e.g. Lake Cabin" value="${pr?esc(pr.name):''}">
+    <label>Icon</label>
+    <select id="pf_emoji">${['🏡','🏠','🏘️','🏖️','🏔️','🌆','🏚️','🏢'].map(e=>`<option ${pr&&pr.emoji===e?'selected':''}>${e}</option>`).join('')}</select>
+    <label>Property type</label>
+    <select id="pf_type">${['Single-family','Condo','Townhouse','Apartment','Vacation home','Rental','Other'].map(t=>`<option ${pr&&pr.type===t?'selected':''}>${t}</option>`).join('')}</select>
+    <label>Address <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+    <input id="pf_addr" placeholder="123 Main St, City" value="${pr?esc(pr.address||''):''}">
+    <div class="actions">
+      <button class="btn ghost" onclick="openSettings()">Cancel</button>
+      <button class="btn primary" onclick="saveProp('${id||''}')">${pr?'Save':'Add property'}</button>
+    </div>
+  `;
+}
+function saveProp(id){
+  const name=$('#pf_name').value.trim();
+  if(!name){alert('Please name the property.');return;}
+  const obj={id:id||('prop'+Date.now()),name,emoji:$('#pf_emoji').value,type:$('#pf_type').value,address:$('#pf_addr').value.trim()};
+  if(id){const i=PROPS.findIndex(x=>x.id===id);PROPS[i]=obj;}else{PROPS.push(obj);setActive(obj.id);}
+  saveProps();refresh();openSettings();
+}
+function delProp(id){
+  if(PROPS.length<2){alert('You need at least one property. Add another before deleting this one.');return;}
+  const n=DATA.filter(p=>p.propertyId===id).length;
+  const pr=propById(id);
+  const other=PROPS.find(x=>x.id!==id);
+  if(!confirm(`Delete “${pr.name}”?`+(n?`\n\nIts ${n} project${n===1?'':'s'} will be moved to “${other.name}”.`:'')))return;
+  DATA.forEach(p=>{if(p.propertyId===id)p.propertyId=other.id;});
+  PROPS=PROPS.filter(x=>x.id!==id);
+  if(activeProp===id)setActive(other.id);
+  save();saveProps();refresh();openSettings();
+}
+
+/* ---------- init ---------- */
+renderHomeHeader();renderPropSwitch();renderStats();renderRecent();
+$('#scrim').addEventListener('click',e=>{if(e.target.id==='scrim')closeForm();});
+$('#setScrim').addEventListener('click',e=>{if(e.target.id==='setScrim')closeSettings();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeForm();closeGallery();closeSettings();}});
+
+/* PWA: register service worker for offline use & installability (works when hosted over https) */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
